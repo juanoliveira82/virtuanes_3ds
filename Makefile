@@ -192,7 +192,13 @@ endif
 ifeq ($(findstring CYGWIN_NT, $(UNAME_S)),CYGWIN_NT)
 	MAKEROM := ./makerom/windows_x86_64/makerom.exe
 endif
-ifeq ($(findstring MINGW32_NT, $(UNAME_S)), MINGW32_NT)
+ifeq ($(findstring MINGW32_NT, $(UNAME_S)),MINGW32_NT)
+	MAKEROM := ./makerom/windows_x86_64/makerom.exe
+endif
+ifeq ($(findstring MINGW64_NT, $(UNAME_S)),MINGW64_NT)
+	MAKEROM := ./makerom/windows_x86_64/makerom.exe
+endif
+ifeq ($(findstring MSYS_NT, $(UNAME_S)),MSYS_NT)
 	MAKEROM := ./makerom/windows_x86_64/makerom.exe
 endif
 #---------------------------------------------------------------------------------
