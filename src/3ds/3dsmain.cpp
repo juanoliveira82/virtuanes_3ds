@@ -24,6 +24,7 @@
 #include "3dsfiles.h"
 #include "3dsinput.h"
 #include "3dslodepng.h"
+#include "3dssplash.h"
 #include "3dsmenu.h"
 #include "3dsmain.h"
 #include "3dsdbg.h"
@@ -273,9 +274,22 @@ bool emulatorSettingsSave(bool includeGlobalSettings, bool includeGameSettings, 
 }
 
 //----------------------------------------------------------------------
-// Start up menu.
+// Start up menu, with the splash screen animating on the top screen.
 //----------------------------------------------------------------------
+void menuSelectFileWithoutPreviews(void);
+
 void menuSelectFile(void)
+{
+    splash3dsBegin();
+    menu3dsSetFrameCallback(splash3dsTick);
+
+    menuSelectFileWithoutPreviews();
+
+    menu3dsSetFrameCallback(NULL);
+    splash3dsEnd();
+}
+
+void menuSelectFileWithoutPreviews(void)
 {
     gfxSetDoubleBuffering(GFX_BOTTOM, true);
     

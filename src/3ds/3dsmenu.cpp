@@ -43,6 +43,9 @@ int                 transferGameScreenCount = 0;
 
 bool                swapBuffer = true;
 
+// Called once per frame, whenever the menu swaps the buffers.
+static void         (*frameCallback)() = NULL;
+
 
 //-------------------------------------------------------
 // Common options
@@ -93,6 +96,9 @@ void menu3dsDrawBlackScreen(float opacity)
 //-------------------------------------------------------
 void menu3dsSwapBuffersAndWaitForVBlank()
 {
+    if (frameCallback)
+        frameCallback();
+
     if (transferGameScreenCount)
     {
         gpu3dsTransferToScreenBuffer();
@@ -594,6 +600,11 @@ static void (*highlightCallback)(int tabIndex, int itemID) = NULL;
 void menu3dsSetHighlightCallback(void (*callback)(int tabIndex, int itemID))
 {
     highlightCallback = callback;
+}
+
+void menu3dsSetFrameCallback(void (*callback)())
+{
+    frameCallback = callback;
 }
 
 //-------------------------------------------------------

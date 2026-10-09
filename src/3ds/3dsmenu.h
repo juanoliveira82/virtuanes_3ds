@@ -166,6 +166,14 @@ bool menu3dsTakeScreenshot(const char *path);
 void menu3dsSetHighlightCallback(void (*callback)(int tabIndex, int itemID));
 
 
+//-------------------------------------------------------
+// Sets a function that the menu calls once per frame while
+// it is running (also while a dialog is open). Use it to
+// animate the top screen. NULL removes it.
+//-------------------------------------------------------
+void menu3dsSetFrameCallback(void (*callback)());
+
+
 
 #define MENU_MAKE_ACTION(ID, text) \
     { MENUITEM_ACTION, ID, text, NULL, 0 }
