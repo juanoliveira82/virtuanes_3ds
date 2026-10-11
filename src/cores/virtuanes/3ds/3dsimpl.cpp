@@ -24,6 +24,7 @@
 #include "3dsimpl.h"
 #include "3dsopt.h"
 #include "3dsconfig.h"
+#include "3dstheme.h"
 #include "3dsdbg.h"
 #include "3dsvideo.h"
 
@@ -145,6 +146,7 @@ SMenuItem optionMenu[] = {
     MENU_MAKE_HEADER1   ("GLOBAL SETTINGS"),
     MENU_MAKE_PICKER    (11000, "  Screen Stretch", "How would you like the final screen to appear?", optionsForStretch, DIALOGCOLOR_CYAN),
     MENU_MAKE_PICKER    (18000, "  Font", "The font used for the user interface.", optionsForFont, DIALOGCOLOR_CYAN),
+    MENU_MAKE_PICKER    (18100, "  Theme", "The color theme of the user interface.", optionsForTheme, DIALOGCOLOR_CYAN),
     MENU_MAKE_CHECKBOX  (15001, "  Hide text in bottom screen", 0),
     MENU_MAKE_DISABLED  (""),
     MENU_MAKE_CHECKBOX  (21000, "  Automatically save state on exit and load state on start", 0),
@@ -330,7 +332,7 @@ char *impl3dsTitleImage = "./virtuanes_3ds_top.png";
 // The title that displays at the bottom right of the
 // menu.
 //---------------------------------------------------------
-char *impl3dsTitleText = "VirtuaNES for 3DS v" VERSION_STRING;
+char *impl3dsTitleText = "v" VERSION_STRING;
 
 
 //---------------------------------------------------------
@@ -890,6 +892,11 @@ bool impl3dsOnMenuSelectedChanged(int ID, int value)
         ui3dsSetFont(value);
         return false;
     }
+    if (ID == 18100)
+    {
+        theme3dsSet(value);
+        return false;
+    }
     if (ID == 30000)
     {
         switch (value)
@@ -1101,9 +1108,18 @@ bool impl3dsReadWriteSettingsGlobal(bool writeMode)
     config3dsReadWriteInt32("ButtonMappingInsertCoin1=%d\n", &settings3DS.OtherOptions[SETTINGS_GLOBALINSERTCOIN1]);
     config3dsReadWriteInt32("ButtonMappingInsertCoin2=%d\n", &settings3DS.OtherOptions[SETTINGS_GLOBALINSERTCOIN2]);
 
-    // All new options should come here!
+
+    // v1.04 options
+    //
+    int themeIndex = theme3dsGetIndex();
+    config3dsReadWriteInt32("Theme=%d\n", &themeIndex, 0, THEME_COUNT - 1);
+    if (!writeMode)
+        theme3dsSet(themeIndex);
 
     config3dsCloseFile();
+
+    // All new options should come here!
+    
     return true;
 }
 
@@ -1205,6 +1221,11 @@ bool impl3dsCopyMenuToOrFromSettings(bool copyMenuToSettings)
 
     bool settingsUpdated = false;
     UPDATE_SETTINGS(settings3DS.Font, -1, 18000);
+
+    int themeIndex = theme3dsGetIndex();
+    UPDATE_SETTINGS(themeIndex, -1, 18100);
+    if (copyMenuToSettings)
+        theme3dsSet(themeIndex);
     UPDATE_SETTINGS(settings3DS.ScreenStretch, -1, 11000);
     UPDATE_SETTINGS(settings3DS.HideUnnecessaryBottomScrText, -1, 15001);
     UPDATE_SETTINGS(settings3DS.MaxFrameSkips, -1, 10000);

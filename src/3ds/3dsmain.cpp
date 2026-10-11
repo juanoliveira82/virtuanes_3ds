@@ -25,6 +25,7 @@
 #include "3dsinput.h"
 #include "3dslodepng.h"
 #include "3dssplash.h"
+#include "3dstheme.h"
 #include "3dsmenu.h"
 #include "3dsmain.h"
 #include "3dsdbg.h"
@@ -83,8 +84,15 @@ void clearTopScreenWithLogo()
 //----------------------------------------------------------------------
 // Start up menu.
 //----------------------------------------------------------------------
+extern SMenuItem optionsForFont[4];     // Defined in 3dsimpl.cpp (3 fonts and the end marker)
+
 SMenuItem emulatorNewMenu[] = {
-    MENU_MAKE_ACTION(6001, "  Exit"),
+    MENU_MAKE_HEADER1   ("APPEARANCE"),
+    MENU_MAKE_PICKER    (18100, "  Theme", "The color theme of the user interface.", optionsForTheme, DIALOGCOLOR_CYAN),
+    MENU_MAKE_PICKER    (18000, "  Font", "The font used for the user interface.", optionsForFont, DIALOGCOLOR_CYAN),
+    MENU_MAKE_DISABLED  (""),
+    MENU_MAKE_HEADER1   ("OTHERS"),
+    MENU_MAKE_ACTION    (6001, "  Quit Emulator"),
     MENU_MAKE_LASTITEM  ()
     };
 
@@ -273,6 +281,26 @@ bool emulatorSettingsSave(bool includeGlobalSettings, bool includeGameSettings, 
     return true;
 }
 
+
+
+//----------------------------------------------------------------------
+// Called when the user changes the theme or the font in the
+// start up menu. Saves the choice right away.
+//----------------------------------------------------------------------
+bool menuStartupChanged(int ID, int value)
+{
+    if (ID == 18000)
+        settings3DS.Font = value;
+
+    bool result = impl3dsOnMenuSelectedChanged(ID, value);
+
+    if (ID == 18000 || ID == 18100)
+        emulatorSettingsSave(true, false, false);
+
+    return result;
+}
+
+
 //----------------------------------------------------------------------
 // Start up menu, with the splash screen animating on the top screen.
 //----------------------------------------------------------------------
@@ -300,6 +328,8 @@ void menuSelectFileWithoutPreviews(void)
     menu3dsAddTab("Select ROM", fileMenu);
     menu3dsSetTabSubTitle(0, NULL);
     menu3dsSetTabSubTitle(1, file3dsGetCurrentDir());
+    menu3dsSetValueByID(-1, 18000, settings3DS.Font);
+    menu3dsSetValueByID(-1, 18100, theme3dsGetIndex());
     menu3dsSetCurrentMenuTab(1);
     if (previousFileID >= 0)
         menu3dsSetSelectedItemIndexByID(1, previousFileID);
@@ -312,7 +342,7 @@ void menuSelectFileWithoutPreviews(void)
         if (appExiting)
             return;
 
-        selection = menu3dsShowMenu(NULL, animateMenu);
+        selection = menu3dsShowMenu(menuStartupChanged, animateMenu);
         animateMenu = false;
 
         if (selection >= 0 && selection < 1000)

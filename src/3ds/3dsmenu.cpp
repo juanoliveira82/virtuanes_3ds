@@ -11,6 +11,7 @@
 #include "3dsmain.h"
 
 #include "3dsinterface.h"
+#include "3dstheme.h"
 
 #define CONSOLE_WIDTH           40
 #define MENU_HEIGHT             (14)
@@ -58,6 +59,12 @@ SMenuItem optionsForNoYes[] = {
 
 SMenuItem optionsForOk[] = {
     MENU_MAKE_ACTION(0, "OK"),
+    MENU_MAKE_LASTITEM  ()
+};
+
+SMenuItem optionsForTheme[3] = {
+    MENU_MAKE_DIALOG_ACTION(THEME_LIGHT, "Light mode", ""),
+    MENU_MAKE_DIALOG_ACTION(THEME_DARK, "Dark mode", ""),
     MENU_MAKE_LASTITEM  ()
 };
 
@@ -295,6 +302,224 @@ void menu3dsDrawItems(
 
 
 //-------------------------------------------------------
+// Draws a round button badge with the letter of a 3DS button.
+//
+// The bottom bar shows hints like "(A) Select" and
+// "(B) Back", where (A) and (B) are small colored circles
+// with a white letter, like the buttons of the console.
+//
+// The circle is drawn pixel by pixel, with a smooth
+// ("anti-aliased") edge. A circle made only of solid
+// pixels looks jagged at this size, so the pixels along
+// the edge are drawn in a color between the circle's
+// color and the background's, depending on how much of
+// each pixel is inside the circle
+//-------------------------------------------------------
+#define BADGE_SIZE          12      // Diameter in pixels
+#define BADGE_SUBSAMPLES    8       // Points tested inside each pixel, in each direction
+
+// The background colors of the badges.
+#define BADGE_RED       0x800D1D    // Button A
+#define BADGE_YELLOW    0x999409    // Button B
+#define BADGE_BLUE      0x0D5280    // Button X
+#define BADGE_GREEN     0x0D8014    // Button Y
+// Button Y is not used in the menu.
+
+// Returns the width of a string in pixels. It is defined in 3dsui.cpp,
+// but isn't declared in 3dsui.h, so we declare it here.
+int ui3dsGetStringWidth(char *s, int startPos = 0, int endPos = 0xffff);
+
+// The letters of the badges always use the Ronda font, in bold, whatever
+// font the user chose for the menu. These are the font in use and the
+// widths of its characters, defined in 3dsui.cpp.
+extern uint8 *fontBitmap;
+extern uint8 *fontWidth;
+
+// Index of the Ronda font, as used by ui3dsSetFont.
+#define BADGE_FONT          1
+
+// Moves the letter left (negative) or right (positive), and up (negative)
+// or down (positive), inside the circle.
+#define BADGE_LETTER_DX     1
+#define BADGE_LETTER_DY     -1
+
+// How much of each pixel of the badge is inside the circle, from
+// 0 (none of it) to 255 (all of it). Indexed as [row][column].
+static unsigned char badgeCoverage[BADGE_SIZE][BADGE_SIZE];
+
+// Set when badgeCoverage has been filled in.
+static bool badgeCoverageReady = false;
+
+//-------------------------------------------------------
+// Works out how much of each pixel of the badge is inside
+// the circle, and keeps the result in badgeCoverage.
+//
+// Only integers are used, so there is no floating point
+// work on the 3DS CPU.
+//-------------------------------------------------------
+static void menu3dsPrepareBadge()
+{
+    // The circle fills the whole badge, so its center is at
+    // (BADGE_SIZE / 2, BADGE_SIZE / 2) and its radius is
+    // BADGE_SIZE / 2 pixels.
+    //
+    // To avoid fractions, distances are measured in units of
+    // 1 / (2 * BADGE_SUBSAMPLES) of a pixel.
+    const int radius = BADGE_SIZE * BADGE_SUBSAMPLES;
+
+    for (int py = 0; py < BADGE_SIZE; py++)
+        for (int px = 0; px < BADGE_SIZE; px++)
+        {
+            // Number of test points of this pixel that are inside the circle.
+            int inside = 0;
+            for (int sy = 0; sy < BADGE_SUBSAMPLES; sy++)
+                for (int sx = 0; sx < BADGE_SUBSAMPLES; sx++)
+                {
+                    // Position of the test point relative to the center of the circle.
+                    int dx = 2 * (px * BADGE_SUBSAMPLES + sx) + 1 - radius;
+                    int dy = 2 * (py * BADGE_SUBSAMPLES + sy) + 1 - radius;
+
+                    // Pythagoras: the point is inside the circle if its
+                    // distance to the center is at most the radius. Both
+                    // sides are squared, so no square root is needed.
+                    if (dx * dx + dy * dy <= radius * radius)
+                        inside++;
+                }
+            badgeCoverage[py][px] = inside * 255 / (BADGE_SUBSAMPLES * BADGE_SUBSAMPLES);
+        }
+
+    badgeCoverageReady = true;
+}
+
+//-------------------------------------------------------
+// Draws a round button badge: a circle of the given color
+// with a white letter in the middle.
+//
+//   x, y        top left corner of the badge. Like everything
+//               else in the menu, it is relative to the
+//               current translation (see ui3dsSetTranslate),
+//               which is what makes the menu slide in and out.
+//   color       color of the circle, in RGB888 (0xRRGGBB).
+//   backColor   color of the background behind the badge, in RGB888.
+//               The edge of the circle is blended with it, so it
+//               has to be a flat color: the bottom bar's color.
+//   letter      the text inside the circle, normally a single
+//               letter such as "A".
+//-------------------------------------------------------
+void menu3dsDrawButtonBadge(int x, int y, int color, int backColor, char *letter)
+{
+    // Work out the coverage table the first time a badge is drawn.
+    if (!badgeCoverageReady)
+        menu3dsPrepareBadge();
+
+    // Split both colors into their red, green and blue parts (0..255),
+    // so that they can be blended below.
+    int r = (color >> 16) & 0xff, g = (color >> 8) & 0xff, b = color & 0xff;
+    int br = (backColor >> 16) & 0xff, bg = (backColor >> 8) & 0xff, bb = backColor & 0xff;
+
+    // Draw the circle one row at a time, from top to bottom.
+    for (int py = 0; py < BADGE_SIZE; py++)
+    {
+        // The pixels completely inside the circle are drawn in one go,
+        // and the ones at the edge one by one, blended with the background.
+        int first = -1, last = -1;
+        for (int px = 0; px < BADGE_SIZE; px++)
+        {
+            // How much of this pixel is inside the circle (0..255).
+            int a = badgeCoverage[py][px];
+
+            // Completely outside: leave the background as it is.
+            if (a == 0)
+                continue;
+
+            // Completely inside: just note it. It is drawn after this loop.
+            if (a == 255)
+            {
+                if (first < 0)
+                    first = px;
+                last = px;
+                continue;
+            }
+
+            // On the edge: mix the circle's color and the background's, in
+            // the proportion given by the coverage. With a = 0 the result
+            // would be the background, with a = 255 the circle's color.
+            //
+            // The blend is done here, with the known background, instead
+            // of using the alpha version of ui3dsDrawRect, because that
+            // one only has 9 levels of transparency (MAX_ALPHA is 8), and
+            // this gives a smoother edge.
+            //
+            // Integer division is slow on the 3DS CPU, but only the few
+            // dozen pixels on the edge of the circle need it.
+            int mixed =
+                (((br * (255 - a) + r * a) / 255) << 16) |
+                (((bg * (255 - a) + g * a) / 255) << 8) |
+                ((bb * (255 - a) + b * a) / 255);
+            ui3dsDrawRect(x + px, y + py, x + px + 1, y + py + 1, mixed);
+        }
+
+        if (first >= 0)
+            ui3dsDrawRect(x + first, y + py, x + last + 1, y + py + 1, color);
+    }
+
+    // The letter: white, in the Ronda font, and drawn twice, one pixel apart,
+    // which makes it bold. The font of the menu is put back afterwards.
+    uint8 *menuFontBitmap = fontBitmap;
+    uint8 *menuFontWidth = fontWidth;
+    ui3dsSetFont(BADGE_FONT);
+
+    // Each copy is centered in a box one pixel narrower than the badge, so
+    // that the two together are centered.
+    int left = x + BADGE_LETTER_DX;
+    int top = y + BADGE_LETTER_DY;
+
+    ui3dsDrawStringWithNoWrapping(left, top, left + BADGE_SIZE - 1, 240, 0xFFFFFF, HALIGN_CENTER, letter);
+    ui3dsDrawStringWithNoWrapping(left + 1, top, left + BADGE_SIZE, 240, 0xFFFFFF, HALIGN_CENTER, letter);
+
+    fontBitmap = menuFontBitmap;
+    fontWidth = menuFontWidth;
+}
+
+//-------------------------------------------------------
+// Draws the button hints at the left of the bottom bar:
+// "(A) Select" and "(B) Back". The color of the background
+// comes from the theme.
+//-------------------------------------------------------
+void menu3dsDrawFooterHints(const STheme *t)
+{
+    // x is where the next thing is drawn. The first badge starts
+    // 10 pixels from the left edge of the screen.
+    int x = 10;
+    int width;
+
+    // The (A) badge. The bottom bar goes from y = 220 to 240, and the
+    // badge is placed at y = 225 so that it sits in the middle of it.
+    menu3dsDrawButtonBadge(x, 225, BADGE_RED, t->FooterBack, "A");
+
+    // The text starts 5 pixels after the badge. It is drawn at y = 223,
+    // the same as the text on the right side of the bar.
+    x += BADGE_SIZE + 5;
+    width = ui3dsGetStringWidth("Select");
+    ui3dsDrawStringWithNoWrapping(x, 223, x + width + 2, 240, t->FooterText, HALIGN_LEFT, "Select");
+    
+    // The next badge starts 10 pixels after the end of the text.
+    x += width + 10;
+
+    menu3dsDrawButtonBadge(x, 225, BADGE_YELLOW, t->FooterBack, "B");
+    x += BADGE_SIZE + 5;
+    width = ui3dsGetStringWidth("Back");
+    ui3dsDrawStringWithNoWrapping(x, 223, x + width + 2, 240, t->FooterText, HALIGN_LEFT, "Back");
+
+    x += width + 10;
+
+    menu3dsDrawButtonBadge(x, 225, BADGE_BLUE, t->FooterBack, "X");
+    x += BADGE_SIZE + 5;
+    width = ui3dsGetStringWidth("Fast Scroll Page");
+    ui3dsDrawStringWithNoWrapping(x, 223, x + width + 2, 240, t->FooterText, HALIGN_LEFT, "Fast Scroll Page");
+}
+
+//-------------------------------------------------------
 // Draws the menu including the tabs and the bottom bar.
 //-------------------------------------------------------
 void menu3dsDrawMenu(int menuItemFrame, int translateY)
@@ -302,12 +527,13 @@ void menu3dsDrawMenu(int menuItemFrame, int translateY)
     SMenuTab *currentTab = &menuTab[currentMenuTab];
 
     char tempBuffer[CONSOLE_WIDTH];
+    const STheme *t = theme3dsCurrent();
 
     // Draw the flat background
     //
-    ui3dsDrawRect(0, 0, 320, 24, 0x1976D2);
-    ui3dsDrawRect(0, 24, 320, 220, 0xFFFFFF);
-    ui3dsDrawRect(0, 220, 320, 240, 0x1976D2);
+    ui3dsDrawRect(0, 0, 320, 24, t->HeaderBack);
+    ui3dsDrawRect(0, 24, 320, 220, t->BodyBack);
+    ui3dsDrawRect(0, 220, 320, 240, t->FooterBack);
 
     // Draw the tabs at the top
     //
@@ -315,12 +541,12 @@ void menu3dsDrawMenu(int menuItemFrame, int translateY)
     int tabPadding = (320 - tabWidth * menuTabCount) / 2;
     for (int i = 0; i < menuTabCount; i++)
     {
-        int color = i == currentMenuTab ? 0xFFFFFF : 0x90CAF9 ;
+        int color = i == currentMenuTab ? t->TabActiveText : t->TabInactiveText;
         ui3dsDrawStringWithNoWrapping(i * tabWidth + tabPadding, 6, (i+1)*tabWidth + tabPadding, 21, color, HALIGN_CENTER, 
             menuTab[i].Title);
 
         if (i == currentMenuTab)
-            ui3dsDrawRect(i * tabWidth + tabPadding, 21, (i+1)*tabWidth + tabPadding, 24, 0xFFFFFF);
+            ui3dsDrawRect(i * tabWidth + tabPadding, 21, (i+1)*tabWidth + tabPadding, 24, t->TabUnderline);
     }
 
     // Shadows
@@ -328,9 +554,8 @@ void menu3dsDrawMenu(int menuItemFrame, int translateY)
     //ui3dsDrawRect(0, 24, 320, 25, 0xcccccc);
     //ui3dsDrawRect(0, 25, 320, 27, 0xeeeeee);
 
-    ui3dsDrawStringWithNoWrapping(10, 223, 285, 240, 0xFFFFFF, HALIGN_LEFT,
-        "A:Select  B:Cancel");
-    ui3dsDrawStringWithNoWrapping(10, 223, 285, 240, 0xFFFFFF, HALIGN_RIGHT,
+    menu3dsDrawFooterHints(t);
+    ui3dsDrawStringWithNoWrapping(10, 223, 285, 240, t->FooterText, HALIGN_RIGHT,
         impl3dsTitleText);
 
     //battery display
@@ -351,21 +576,21 @@ void menu3dsDrawMenu(int menuItemFrame, int translateY)
         battY1 + battHeadSpacing, 
         battX2 - battFullLevelWidth - battBorderWidth, 
         battY2 - battHeadSpacing, 
-        0xFFFFFF, 1.0f);
+        t->BatteryBorder, 1.0f);
     // battery body
     ui3dsDrawRect(
         battX2 - battFullLevelWidth - battBorderWidth, 
         battY1 - battBorderWidth, 
         battX2 + battBorderWidth, 
         battY2 + battBorderWidth, 
-        0xFFFFFF, 1.0f);
+        t->BatteryBorder, 1.0f);
     // battery's empty insides
     ui3dsDrawRect(
         battX2 - battFullLevelWidth, 
         battY1, 
         battX2, 
         battY2, 
-        0x1976D2, 1.0f);
+        t->FooterBack, 1.0f);
     
     ptmuInit();
     
@@ -374,7 +599,7 @@ void menu3dsDrawMenu(int menuItemFrame, int translateY)
     if(R_SUCCEEDED(PTMU_GetBatteryChargeState(&batteryChargeState)) && batteryChargeState) {
         ui3dsDrawRect(
             battX2-battFullLevelWidth + 1, battY1 + 1, 
-            battX2 - 1, battY2 - 1, 0xFF9900, 1.0f);
+            battX2 - 1, battY2 - 1, t->BatteryCharging, 1.0f);
     } else if(R_SUCCEEDED(PTMU_GetBatteryLevel(&batteryLevel))) {
         if (batteryLevel > 5)
             batteryLevel = 5;
@@ -382,7 +607,7 @@ void menu3dsDrawMenu(int menuItemFrame, int translateY)
         {
             ui3dsDrawRect(
                 battX2-battLevelWidth*(i+1), battY1 + 1, 
-                battX2-battLevelWidth*(i) - 1, battY2 - 1, 0xFFFFFF, 1.0f);
+                battX2-battLevelWidth*(i) - 1, battY2 - 1, t->BatteryLevel, 1.0f);
         }
     } else {
         //ui3dsDrawRect(battX2, battY1, battX2, battY2, 0xFFFFFF, 1.0f);
@@ -400,16 +625,15 @@ void menu3dsDrawMenu(int menuItemFrame, int translateY)
     {
         menu3dsDrawItems(
             currentTab, 20, menuStartY, maxItems,
-            0x333333,       // selectedItemBackColor
-            0xffffff,       // selectedItemTextColor
-            0x777777,       // selectedItemDescriptionTextColor
-
-            0x000000,       // checkedItemTextColor
-            0x333333,       // normalItemTextColor      
-            0x777777,       // normalItemDescriptionTextColor      
-            0x888888,       // disabledItemTextColor
-            0x1E88E5,       // headerItemTextColor
-            0x1E88E5);      // subtitleTextColor
+            t->SelectedItemBack,        // selectedItemBackColor
+            t->SelectedItemText,        // selectedItemTextColor
+            t->SelectedItemDescText,    // selectedItemDescriptionTextColor
+            t->CheckedItemText,         // checkedItemTextColor
+            t->NormalItemText,          // normalItemTextColor      
+            t->NormalItemDescText,      // normalItemDescriptionTextColor      
+            t->DisabledItemText,        // disabledItemTextColor
+            t->HeaderItemText,          // headerItemTextColor
+            t->SubtitleText);           // subtitleTextColor
     }
     else
     {
@@ -417,20 +641,19 @@ void menu3dsDrawMenu(int menuItemFrame, int translateY)
             menuItemFrame = -menuItemFrame;
         float alpha = (float)(ANIMATE_TAB_STEPS - menuItemFrame + 1) / (ANIMATE_TAB_STEPS + 1);
 
-        int white = ui3dsApplyAlphaToColor(0xFFFFFF, 1.0f - alpha);
+        int white = ui3dsApplyAlphaToColor(t->BodyBack, 1.0f - alpha);   // fade towards the body background
         
          menu3dsDrawItems(
             currentTab, 20, menuStartY, maxItems,
-            ui3dsApplyAlphaToColor(0x333333, alpha) + white,
-            ui3dsApplyAlphaToColor(0xffffff, alpha) + white,       // selectedItemTextColor
-            ui3dsApplyAlphaToColor(0x777777, alpha) + white,       // selectedItemDescriptionTextColor
-
-            ui3dsApplyAlphaToColor(0x000000, alpha) + white,       // checkedItemTextColor
-            ui3dsApplyAlphaToColor(0x333333, alpha) + white,       // normalItemTextColor      
-            ui3dsApplyAlphaToColor(0x777777, alpha) + white,       // normalItemDescriptionTextColor      
-            ui3dsApplyAlphaToColor(0x888888, alpha) + white,       // disabledItemTextColor
-            ui3dsApplyAlphaToColor(0x1E88E5, alpha) + white,       // headerItemTextColor
-            ui3dsApplyAlphaToColor(0x1E88E5, alpha) + white);      // subtitleTextColor       
+            ui3dsApplyAlphaToColor(t->SelectedItemBack, alpha) + white,
+            ui3dsApplyAlphaToColor(t->SelectedItemText, alpha) + white,       // selectedItemTextColor
+            ui3dsApplyAlphaToColor(t->SelectedItemDescText, alpha) + white,       // selectedItemDescriptionTextColor
+            ui3dsApplyAlphaToColor(t->CheckedItemText, alpha) + white,       // checkedItemTextColor
+            ui3dsApplyAlphaToColor(t->NormalItemText, alpha) + white,       // normalItemTextColor      
+            ui3dsApplyAlphaToColor(t->NormalItemDescText, alpha) + white,       // normalItemDescriptionTextColor      
+            ui3dsApplyAlphaToColor(t->DisabledItemText, alpha) + white,       // disabledItemTextColor
+            ui3dsApplyAlphaToColor(t->HeaderItemText, alpha) + white,       // headerItemTextColor
+            ui3dsApplyAlphaToColor(t->SubtitleText, alpha) + white);      // subtitleTextColor       
         //svcSleepThread((long)(1000000.0f * 1000.0f));
     }
 
@@ -447,22 +670,17 @@ void menu3dsDrawMenu(int menuItemFrame, int translateY)
 
 
 
-
-int dialogBackColor = 0xEC407A;
-int dialogTextColor = 0xffffff;
-int dialogItemTextColor = 0xffffff;
-int dialogSelectedItemTextColor = 0xffffff;
-int dialogSelectedItemBackColor = 0x000000;
-
 //-------------------------------------------------------
-// Draws the dialog.
+// Draws the dialog. All the colors come from the theme.
 //-------------------------------------------------------
 void menu3dsDrawDialog()
 {
+    const STheme *t = theme3dsCurrent();
+
     // Dialog's Background
-    int dialogBackColor2 = ui3dsApplyAlphaToColor(dialogBackColor, 0.9f);
-    ui3dsDrawRect(0, 0, 320, 75, dialogBackColor2);
-    ui3dsDrawRect(0, 75, 320, 160, dialogBackColor);
+    ui3dsDrawRect(0, 0, 320, 75, t->DialogTopBack);
+    ui3dsDrawRect(0, 75, 320, 160, t->DialogBodyBack);
+    ui3dsDrawRect(0, 75, 320, 78, t->DialogAccent);
 
     // Left trim the dialog title
     int len = strlen(dialogTab.Title);
@@ -475,26 +693,21 @@ void menu3dsDrawDialog()
         }
 
     // Draw the dialog's title and descriptive text
-    int dialogTitleTextColor = 
-        ui3dsApplyAlphaToColor(dialogBackColor, 0.5f) + 
-        ui3dsApplyAlphaToColor(dialogTextColor, 0.5f);
-    ui3dsDrawStringWithNoWrapping(30, 10, 290, 25, dialogTitleTextColor, HALIGN_LEFT, &dialogTab.Title[startChar]);
-    ui3dsDrawStringWithWrapping(30, 30, 290, 70, dialogTextColor, HALIGN_LEFT, dialogTab.DialogText);
+    ui3dsDrawStringWithNoWrapping(30, 10, 290, 25, t->DialogTitleText, HALIGN_LEFT, &dialogTab.Title[startChar]);
+    ui3dsDrawStringWithWrapping(30, 30, 290, 70, t->DialogText, HALIGN_LEFT, dialogTab.DialogText);
 
     // Draw the selectable items.
-    int dialogItemDescriptionTextColor = dialogTitleTextColor;
     menu3dsDrawItems(
         &dialogTab, 30, 80, DIALOG_HEIGHT,
-        dialogSelectedItemBackColor,        // selectedItemBackColor
-        dialogSelectedItemTextColor,        // selectedItemTextColor
-        dialogItemDescriptionTextColor,     // selectedItemDescriptionColor
-
-        dialogItemTextColor,                // checkedItemTextColor
-        dialogItemTextColor,                // normalItemTextColor
-        dialogItemDescriptionTextColor,     // normalItemDescriptionTextColor
-        dialogItemDescriptionTextColor,     // disabledItemTextColor
-        dialogItemTextColor,                // headerItemTextColor
-        dialogItemTextColor                 // subtitleTextColor
+        t->DialogSelectedItemBack,      // selectedItemBackColor
+        t->DialogSelectedItemText,      // selectedItemTextColor
+        t->DialogTitleText,             // selectedItemDescriptionColor
+        t->DialogItemText,              // checkedItemTextColor
+        t->DialogItemText,              // normalItemTextColor
+        t->DialogTitleText,             // normalItemDescriptionTextColor
+        t->DialogTitleText,             // disabledItemTextColor
+        t->DialogItemText,              // headerItemTextColor
+        t->DialogItemText               // subtitleTextColor
         );
 }
 
@@ -1155,8 +1368,6 @@ int menu3dsShowDialog(char *title, char *dialogText, int newDialogBackColor, SMe
     }
 
     SMenuTab *currentTab = &dialogTab;
-
-    dialogBackColor = newDialogBackColor;
 
     currentTab->Title = title;
     currentTab->DialogText = dialogText;

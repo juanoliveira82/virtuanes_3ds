@@ -209,6 +209,9 @@ void menu3dsSetFrameCallback(void (*callback)());
 extern SMenuItem optionsForNoYes[];
 extern SMenuItem optionsForOk[];
 
+// Light, Dark and the end marker. The IDs are the THEME_* values.
+extern SMenuItem optionsForTheme[3];
+
 
 #define DIALOGCOLOR_RED     0xF44336
 #define DIALOGCOLOR_GREEN   0x4CAF50
