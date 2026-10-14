@@ -485,6 +485,10 @@ void menuPause()
         int selection = menu3dsShowMenu(menuSelectedChanged, animateMenu);
         animateMenu = false;
 
+        // The menu also returns -1 when the app is closing: don't resume then.
+        if (appExiting)
+            break;
+
         if (selection == -1 || selection == 1000)
         {
             // Cancels the menu and resumes game
@@ -819,9 +823,14 @@ void emulatorFinalize()
 #ifndef EMU_RELEASE
     printf("gspWaitForP3D:\n");
 #endif
-    gspWaitForVBlank();
-    gpu3dsWaitForPreviousFlush();
-    gspWaitForVBlank();
+    // Not when the system has taken the GPU to close us (closing from the
+    // HOME menu): the waits would never return.
+    if (gspHasGpuRight())
+    {
+        gspWaitForVBlank();
+        gpu3dsWaitForPreviousFlush();
+        gspWaitForVBlank();
+    }
 
 #ifndef EMU_RELEASE
     printf("gpu3dsFinalize:\n");
@@ -946,7 +955,7 @@ void emulatorLoop()
 	while (true)
 	{
         startFrameTick = svcGetSystemTick();
-        aptMainLoop();
+        app3dsMainLoop();
 
         if (appExiting)
             break;
