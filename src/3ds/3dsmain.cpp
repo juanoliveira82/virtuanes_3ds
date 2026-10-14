@@ -28,6 +28,7 @@
 #include "3dstheme.h"
 #include "3dsmenu.h"
 #include "3dsmain.h"
+#include "3dstrace.h"
 #include "3dsdbg.h"
 
 #include "3dsinterface.h"
@@ -120,14 +121,17 @@ bool emulatorLoadRom()
 
     char romFileNameFullPath2[_MAX_PATH];
     strncpy(romFileNameFullPath2, romFileNameFullPath, _MAX_PATH - 1);
+    TRACE3DS_LOG("load ROM: %s", romFileNameFullPath2);
 
     // Load up the new ROM settings first.
     //
     emulatorSettingsLoad(false, true, false);
     impl3dsApplyAllSettings();
     
+    TRACE3DS_LOG("settings loaded");
     if (!impl3dsLoadROM(romFileNameFullPath2))
     {
+        TRACE3DS_LOG("impl3dsLoadROM failed");
         // If the ROM loading fails:
         // 1. Restore the original ROM file path.
         strncpy(romFileNameFullPath, romFileNameFullPathOriginal, _MAX_PATH - 1);
@@ -142,8 +146,10 @@ bool emulatorLoadRom()
     }
     impl3dsApplyAllSettings();
 
+    TRACE3DS_LOG("ROM loaded; auto savestate=%d", settings3DS.AutoSavestate);
     if (settings3DS.AutoSavestate)
         impl3dsLoadState(0);
+    TRACE3DS_LOG("emulatorLoadRom done");
 
     emulator.emulatorState = EMUSTATE_EMULATE;
 
@@ -754,18 +760,22 @@ void emulatorInitialize()
 
     printf ("Initializing...\n");
 
+    TRACE3DS_LOG("start: isReal3DS=%d", emulator.isReal3DS);
     if (!impl3dsInitializeCore())
     {
         printf ("Unable to initialize emulator core\n");
         exit(0);
     }
 
+    TRACE3DS_LOG("core initialized");
     if (!snd3dsInitialize())
     {
+        TRACE3DS_LOG("snd3dsInitialize failed");
         printf ("Unable to initialize CSND\n");
         exit (0);
     }
 
+    TRACE3DS_LOG("sound initialized: audioType=%d", snd3DS.audioType);
     ui3dsInitialize();
 
     /*if (romfsInit()!=0)
@@ -934,9 +944,15 @@ void emulatorLoop()
         ui3dsDrawStringWithNoWrapping(0, 100, 320, 115, 0x7f7f7f, HALIGN_CENTER, "Touch screen for menu");
     }
 
+    TRACE3DS_LOG("starting sound");
     snd3dsStartPlaying();
+    TRACE3DS_LOG("sound started: isPlaying=%d", snd3DS.isPlaying);
 
     impl3dsEmulationBegin();
+    TRACE3DS_LOG("emulation begun");
+#ifdef TRACE3DS
+    int traceFrame = 0;
+#endif
 
 	while (true)
 	{
@@ -946,6 +962,15 @@ void emulatorLoop()
         if (appExiting)
             break;
 
+#ifdef TRACE3DS
+        trace3dsDetail = traceFrame < 5;
+        if (traceFrame < 5 || traceFrame % 60 == 0)
+            TRACE3DS_LOG("frame %d: mixed %d sound blocks", traceFrame, snd3dsMixCount);
+        if (traceFrame == 600)
+            TRACE3DS_LOG("frame 600 reached, stopping per-frame log");
+        if (traceFrame <= 600)
+            traceFrame++;
+#endif
         gpu3dsStartNewFrame();
         gpu3dsCheckSlider();
         updateFrameCount();
@@ -954,7 +979,9 @@ void emulatorLoop()
         if (emulator.emulatorState != EMUSTATE_EMULATE)
             break;
 
+        TRACE3DS_DETAIL("run frame");
         impl3dsEmulationRunOneFrame(firstFrame, skipDrawingFrame);
+        TRACE3DS_DETAIL("frame done");
 
         firstFrame = false; 
 
