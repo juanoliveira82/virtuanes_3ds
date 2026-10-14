@@ -805,7 +805,13 @@ void emulatorFinalize()
 {
     consoleClear();
 
+    // Sound first: the mixing thread generates samples from the core.
+    TRACE3DS_LOG("finalize: sound");
+    snd3dsFinalize();
+
+    TRACE3DS_LOG("finalize: core");
     impl3dsFinalize();
+    TRACE3DS_LOG("finalize: wait for GPU");
 
 #ifndef EMU_RELEASE
     printf("gspWaitForP3D:\n");
@@ -815,14 +821,11 @@ void emulatorFinalize()
     gspWaitForVBlank();
 
 #ifndef EMU_RELEASE
-    printf("snd3dsFinalize:\n");
-#endif
-    snd3dsFinalize();
-
-#ifndef EMU_RELEASE
     printf("gpu3dsFinalize:\n");
 #endif
+    TRACE3DS_LOG("finalize: GPU");
     gpu3dsFinalize();
+    TRACE3DS_LOG("finalize: services");
 
 #ifndef EMU_RELEASE
     printf("ptmSysmExit:\n");
@@ -846,6 +849,7 @@ void emulatorFinalize()
     printf("srvExit:\n");
 #endif
 	srvExit();
+    TRACE3DS_LOG("finalize: done");
 }
 
 
@@ -1062,7 +1066,9 @@ void emulatorLoop()
 
 	}
 
+    TRACE3DS_LOG("leaving emulation: state=%d, appExiting=%d", emulator.emulatorState, appExiting);
     snd3dsStopPlaying();
+    TRACE3DS_LOG("sound stopped");
 
     // Wait for the sound thread to leave the snd3dsMixSamples entirely
     // to prevent a race condition between the PTMU_GetBatteryChargeState (when
@@ -1107,8 +1113,10 @@ int main()
     }
 
 quit:
+    TRACE3DS_LOG("quit: appExiting=%d, state=%d", appExiting, emulator.emulatorState);
+    // Auto-save on exit, as when switching games (this used to load instead).
     if (emulator.emulatorState > 0 && settings3DS.AutoSavestate)
-        impl3dsLoadState(0);
+        impl3dsSaveState(0);
 
     printf("emulatorFinalize:\n");
     emulatorFinalize();
