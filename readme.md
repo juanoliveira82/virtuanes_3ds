@@ -1,4 +1,6 @@
-# VirtuaNES for 3DS
+<p align="center">
+  <img src="assets/splash/splash_logo.png" alt="VirtuaNES Logo" >
+</p>
 
 **A fast, high-compatibility NES and Famicom emulator for the Nintendo 3DS family.**
 
@@ -34,7 +36,7 @@ This project continues from [GamingFanboy365's virtuanes3ds](https://github.com/
 
 You need a 3DS, 2DS or New 3DS that can run homebrew (usually with custom firmware). There are two ways to install: the `.3dsx` runs from the Homebrew Launcher without installing anything, and the `.cia` installs VirtuaNES as an app on the HOME menu.
 
-Get the files from the [Releases](https://github.com/juanoliveira82/virtuanes_3ds/releases) page, or build them yourself (see [Building](#building)).
+VirtuaNES for 3DS is distributed as source code: you build it yourself (see [Building](#building)), which produces `virtuanes_3ds.3dsx`, `virtuanes_3ds.smdh` and `virtuanes_3ds.cia`.
 
 ### Homebrew Launcher (.3dsx)
 
@@ -141,10 +143,12 @@ To test a new mapper, add a test function and a `TESTS` entry to `tools/azahar/m
 
 The animated splash screen on the top screen is made from two PNG files in the `data` folder. The Makefile embeds them in the emulator, so they end up in both the `.3dsx` and the `.cia`:
 
-- `data/splash_logo.png` is the logo, drawn at the centre. Use a PNG with transparency. Anything larger than the 400x240 screen is scaled down to fit.
-- `data/splash_background.png` is the background, which scrolls upwards and repeats. 400 pixels wide (or more) and at least 240 tall works best. Make its top and bottom edges match, so the loop has no seam. It is darkened a little so that the logo stands out.
+- `assets/splash/splash_logo.png` is the logo, drawn at the centre. Use a PNG with transparency. Anything larger than the 400x240 screen is scaled down to fit.
+- `assets/splash/splash_background.png` is the background, which scrolls upwards and repeats. 400 pixels wide (or more) and at least 240 tall works best. Make its top and bottom edges match, so the loop has no seam. It is darkened a little so that the logo stands out.
 
-Replace the files and run `make`. Don't put any other kind of file in `data`, because the Makefile embeds everything in it. The scrolling speed and the darkening of the background are constants at the top of `src/3ds/3dssplash.cpp`.
+Replace the files and run `make`. Don't put any other kind of file in `assets/splash/`, because the Makefile embeds everything in it. The scrolling speed and the darkening of the background are constants at the top of `src/3ds/3dssplash.cpp`.
+
+The images that come with the project are simple original artwork. Replace them with your own.
 
 ## Change history
 
@@ -156,7 +160,7 @@ Replace the files and run `make`. Don't put any other kind of file in `data`, be
 - Dialogs, such as the theme picker and the confirmation dialogs, follow the colors of the selected theme.
 - The Emulator tab of the start-up menu has a new Appearance section, with the theme and the font, next to Quit Emulator.
 - The bottom bar of the menu shows colored A and B buttons next to Select and Back. The battery indicator is orange and turns green while the console is charging.
-- Animated splash screen on the top screen while you browse the ROM list: a scrolling background behind the logo. Both images are PNG files built into the emulator (data/splash_logo.png and data/splash_background.png), so they are replaced by editing those files and running make.
+- Animated splash screen on the top screen while you browse the ROM list: a scrolling background behind the logo. Both images are PNG files built into the emulator (assets/splash/splash_logo.png and assets/splash/splash_background.png), so they are replaced by editing those files and running make.
 - Fixed games hanging at start-up on real 3DS hardware, and the sound being silent there. A function that ended without returning a value turned into an endless loop with current compilers, and a missing return is now a build error.
 - The sound stops while the HOME menu is open or the lid is closed, and comes back when you return to the game.
 - Fixed the hang when closing the app from the HOME menu, and the "An error has occurred" message when exiting.
@@ -276,4 +280,4 @@ The project also contains work with its own copyright notices, which are kept in
 - lodepng, by Lode Vandevenne (`src/3ds/3dslodepng.*`), under the zlib license;
 - the code that Norix credits in the VirtuaNES core (see the credits above).
 
-The source code of every release is in this repository, and each release names the tag it was built from. The project doesn't include ROMs or BIOS files.
+The source code is in this repository. The project doesn't include ROMs or BIOS files, and it doesn't distribute ready-made builds.
