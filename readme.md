@@ -103,6 +103,8 @@ Without a local devkitPro, `tools/build.sh` runs the same `make` inside the offi
 
 `make DEBUGOUT=1` turns on the `DEBUGOUT()` traces that are sprinkled through the VirtuaNES core and mappers (ROM header details at load time, unhandled mapper writes and so on). They go to `svcOutputDebugString`, which shows up in the emulator's log. The flag isn't tracked by the build, so run `make clean` when switching it on or off.
 
+`make TRACE=1` is for debugging on real hardware, where there's no emulator log. The app appends a step-by-step log of start-up, ROM loading, sound start, the first frames, HOME menu events and shutdown to `virtuanes_trace.txt` at the root of the SD card, saving after every line so the log survives a freeze. A watchdog thread also logs the app's state every 2 seconds while it's in the background or closing. Like `DEBUGOUT`, run `make clean` when switching it.
+
 ### Running and debugging in Azahar
 
 The [Azahar](https://azahar-emu.org/) 3DS emulator (the successor of Citra and Lime3DS) runs the `.3dsx` directly, which is the quickest way to try a change. If you have it installed, open `virtuanes_3ds.3dsx` from it, and put your ROMs on its emulated SD card, the `sdmc` folder in Azahar's user directory. Under an emulator VirtuaNES runs without sound, because Azahar doesn't implement the CSND sound service it uses.
@@ -148,13 +150,18 @@ Replace the files and run `make`. Don't put any other kind of file in `data`, be
 
 ### v1.04
 
+- Fixed building the CIA from the MSYS2 shell on Windows.
+- Removed the box art and screenshot previews from the ROM list, and the tools/make_previews.py script.
 - New user interface themes: Dark (based on the dark theme of matbo87's Snes9x 3DS) and Light (updated from the original look). Change the theme in the Appearance section of the Emulator tab, or in the Options. The choice is saved with the global settings.
 - Dialogs, such as the theme picker and the confirmation dialogs, follow the colors of the selected theme.
 - The Emulator tab of the start-up menu has a new Appearance section, with the theme and the font, next to Quit Emulator.
 - The bottom bar of the menu shows colored A and B buttons next to Select and Back. The battery indicator is orange and turns green while the console is charging.
 - Animated splash screen on the top screen while you browse the ROM list: a scrolling background behind the logo. Both images are PNG files built into the emulator (data/splash_logo.png and data/splash_background.png), so they are replaced by editing those files and running make.
-- Removed the box art and screenshot previews from the ROM list, and the tools/make_previews.py script.
-- Fixed building the CIA from the MSYS2 shell on Windows.
+- Fixed games hanging at start-up on real 3DS hardware, and the sound being silent there. A function that ended without returning a value turned into an endless loop with current compilers, and a missing return is now a build error.
+- The sound stops while the HOME menu is open or the lid is closed, and comes back when you return to the game.
+- Fixed the hang when closing the app from the HOME menu, and the "An error has occurred" message when exiting.
+- With auto-savestate on, exiting now saves the state (it used to load it, losing the progress since the last game switch).
+- Added `make TRACE=1`, a build that logs the start-up, the sound and the shutdown to the SD card, to help find freezes on real hardware.
 
 ### v1.03
 
@@ -254,7 +261,7 @@ The code that was written with AI help is commented in detail, so that it can be
 5. Authors of the Citra 3DS Emulator team. Without them, this project would have been extremely difficult.
 6. SG6000 for helping with debugging the nasty crashing bug.
 7. Fellow forummers on GBATemp for the bug reports and suggestions for improvements.
-8. [GamingFanboy365](https://github.com/GamingFanboy365/virtuanes3ds), whose fork this project is based on, for adding the new mappers 30, 37, 152, 153, 154, 155, 157, 158, 159, 207 and 210, and for the build setup and the Azahar test tools.
+8. [GamingFanboy365](https://github.com/GamingFanboy365/virtuanes3ds), whose fork this project is based on, for adding the new mappers 30, 37, 152, 153, 154, 155, 157, 158, 159, 207 and 210, for the build setup and the Azahar test tools, and for the fixes that make the emulator run on real hardware (start-up, sound, the HOME menu and exit).
 9. matbo87, whose Snes9x 3DS fork inspired the themes, the bottom bar and the splash screen.
 
 ## License
