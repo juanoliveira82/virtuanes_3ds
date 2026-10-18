@@ -8,7 +8,7 @@
 - Dialogs, such as the theme picker and the confirmation dialogs, follow the colors of the selected theme.
 - The Emulator tab of the start-up menu has a new Appearance section, with the theme and the font, next to Quit Emulator.
 - The bottom bar of the menu shows colored A and B buttons next to Select and Back. The battery indicator is orange and turns green while the console is charging.
-- Animated splash screen on the top screen while you browse the ROM list: a scrolling background behind the logo. Both images are PNG files built into the emulator (data/splash_logo.png and data/splash_background.png), so they are replaced by editing those files and running make.
+- Animated splash screen on the top screen while you browse the ROM list: a scrolling background behind the logo. Both images are PNG files built into the emulator (assets/splash/splash_logo.png and assets/splash/splash_background.png), so they are replaced by editing those files and running make.
 - Fixed games hanging at start-up on real 3DS hardware, and the sound being silent there. A function that ended without returning a value turned into an endless loop with current compilers, and a missing return is now a build error.
 - The sound stops while the HOME menu is open or the lid is closed, and comes back when you return to the game.
 - Fixed the hang when closing the app from the HOME menu, and the "An error has occurred" message when exiting.
