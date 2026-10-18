@@ -9,8 +9,8 @@
 #define SCREEN_WIDTH    400
 #define SCREEN_HEIGHT   240
 
-// The artwork is built into the emulator. data/splash_logo.png and
-// data/splash_background.png are turned into these symbols by the
+// The artwork is built into the emulator. assets/splash/splash_logo.png and
+// assets/splash/splash_background.png are turned into these symbols by the
 // Makefile (the %.png.o rule), so changing the images only takes
 // replacing those files and running make.
 extern "C"

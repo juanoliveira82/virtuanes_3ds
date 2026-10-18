@@ -27,7 +27,7 @@ include $(DEVKITARM)/3ds_rules
 #     - icon.png
 #     - <libctru folder>/default_icon.png
 #---------------------------------------------------------------------------------
-APP_TITLE	:=	VirtuaNES for 3DS
+APP_TITLE	:=	VirtuaNES 3DS
 APP_DESCRIPTION	:=	High compatibility NES emulator for your old 3DS / 2DS.
 APP_AUTHOR	:=	bubble2k16
 # Version shown in the app, and the CIA's title version (major.minor.micro,
@@ -35,12 +35,12 @@ APP_AUTHOR	:=	bubble2k16
 VERSION_MAJOR	:=	1
 VERSION_MINOR	:=	0
 VERSION_MICRO	:=	4
-ASSETS		:=	src/cores/virtuanes/assets
+ASSETS		:=	assets
 ICON		:=	$(ASSETS)/icon.png
 TARGET		:=	virtuanes_3ds
 BUILD		:=	build
 SOURCES		:=	src
-DATA		:=	data
+DATA		:=	assets/splash
 INCLUDES	:=	include \
 			src/3ds/zlib \
 			src/3ds \

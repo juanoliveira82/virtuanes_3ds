@@ -6,14 +6,14 @@
 // menu is shown.
 //
 // The artwork is built into the emulator from two PNG files
-// in the data folder of the project:
+// in the assets/splash/ folder of the project:
 //
-//   data/splash_logo.png
+//   assets/splash/splash_logo.png
 //       The logo, drawn centred to the screen. Use a PNG with
 //       transparency. Anything bigger than the 400x240 screen
 //       is scaled down to fit.
 //
-//   data/splash_background.png
+//   assets/splash/splash_background.png
 //       Background that scrolls upwards, tiled both ways.
 //       400 pixels wide (or more) is best, and any height
 //       from 240 up. Make its top and bottom edges match,
@@ -22,7 +22,7 @@
 //
 // Edit the PNGs and run make; the Makefile embeds them in
 // the .3dsx and the .cia (rule %.png.o). Don't put any other
-// kind of file in data/ without adding a rule for it.
+// kind of file in assets/splash/ without adding a rule for it.
 //---------------------------------------------------------
 
 // Call before showing the ROM menu.
