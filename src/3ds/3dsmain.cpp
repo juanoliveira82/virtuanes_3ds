@@ -375,6 +375,10 @@ void menuSelectFileWithoutPreviews(void)
             }
             else
             {
+                // Remember this folder and ROM for next time, as loading
+                // a ROM from the in-game menu does.
+                emulatorSettingsSave(true, false, false);
+
                 if (!emulatorLoadRom())
                 {
                     menu3dsShowDialog("Load ROM", "Hmm... unable to load ROM.", DIALOGCOLOR_RED, optionsForOk);
