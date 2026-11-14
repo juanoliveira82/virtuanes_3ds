@@ -927,6 +927,7 @@ void emulatorLoop()
 
     bool firstFrame = true;
 
+    gpu3dsRestoreLostState();   // if the HOME menu was visited from a menu
     gpu3dsResetState();
 
     frameCount60 = 60;
@@ -963,6 +964,22 @@ void emulatorLoop()
 
         if (appExiting)
             break;
+
+        // Back from the HOME menu, which used the GPU meanwhile: set the
+        // GPU up again as when coming from the menu, or the picture stays
+        // frozen. The visit doesn't count as one very slow frame either.
+        if (gpu3dsRestoreLostState())
+        {
+            impl3dsEmulationBegin();
+            startFrameTick = svcGetSystemTick();
+            emuFrameTotalActualTicks = 0;
+            emuFrameTotalAccurateTicks = 0;
+            emuFramesSkipped = 0;
+            skipDrawingFrame = false;
+#ifdef TRACE3DS
+            traceFrame = 0;     // log the first frames after returning as well
+#endif
+        }
 
 #ifdef TRACE3DS
         trace3dsProgress++;
