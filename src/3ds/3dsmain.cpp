@@ -107,6 +107,23 @@ extern SMenuItem emulatorMenu[];
 bool emulatorSettingsLoad(bool, bool, bool);
 bool emulatorSettingsSave(bool, bool, bool);
 
+//-------------------------------------------------------
+// Tells the user that emulatorLoadRom failed, and why if
+// the core said.
+//-------------------------------------------------------
+void showLoadRomFailedDialog()
+{
+    char text[400];
+    const char *reason = impl3dsGetLoadROMError();
+    if (reason && reason[0])
+        snprintf(text, sizeof(text), "Hmm... unable to load ROM.\n\n%s", reason);
+    else
+        snprintf(text, sizeof(text), "Hmm... unable to load ROM.");
+    TRACE3DS_LOG("load ROM failed: %s", text);
+    menu3dsShowDialog("Load ROM", text, DIALOGCOLOR_RED, optionsForOk);
+}
+
+
 bool emulatorLoadRom()
 {
     impl3dsClearAllCheats();
@@ -381,7 +398,7 @@ void menuSelectFileWithoutPreviews(void)
 
                 if (!emulatorLoadRom())
                 {
-                    menu3dsShowDialog("Load ROM", "Hmm... unable to load ROM.", DIALOGCOLOR_RED, optionsForOk);
+                    showLoadRomFailedDialog();
                     menu3dsHideDialog();
                 }
                 else
@@ -559,7 +576,7 @@ void menuPause()
 
                     if (!emulatorLoadRom())
                     {
-                        menu3dsShowDialog("Load ROM", "Hmm... unable to load ROM.", DIALOGCOLOR_RED, optionsForOk);
+                        showLoadRomFailedDialog();
                         menu3dsHideDialog();
                     }
                     else
