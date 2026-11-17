@@ -14,6 +14,8 @@
 - Fixed the hang when closing the app from the HOME menu, and the "An error has occurred" message when exiting.
 - With auto-savestate on, exiting now saves the state (it used to load it, losing the progress since the last game switch).
 - Added `make TRACE=1`, a build that logs the start-up, the sound and the shutdown to the SD card, to help find freezes on real hardware.
+- The ROM list opens in the folder of the last game you loaded.
+- NES color palettes: choose between 8 palettes (FCEUX, four by FirebrandX, PC-10, Sony CXA and Wavebeam) in the Options. The change applies immediately, even in a running game, and is saved with the global settings.
 
 ### v1.03
 

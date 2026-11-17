@@ -78,6 +78,18 @@ SMenuItem optionsForStretch[] = {
     MENU_MAKE_LASTITEM  ()
 };
 
+SMenuItem optionsForPalette[] = {
+      MENU_MAKE_DIALOG_ACTION (0, "FCEUX", "The default palette."),
+      MENU_MAKE_DIALOG_ACTION (1, "Composite Direct (FBX)", "Direct capture from the composite output."),
+      MENU_MAKE_DIALOG_ACTION (2, "NES Classic (FBX)", "Taken from the NES Classic Edition."),
+      MENU_MAKE_DIALOG_ACTION (3, "PC-10", "The PlayChoice-10 arcade system."),
+      MENU_MAKE_DIALOG_ACTION (4, "PVM Style D93 (FBX)", "Sony PVM monitor, D93 color temperature."),
+      MENU_MAKE_DIALOG_ACTION (5, "Smooth (FBX)", "A smooth, natural palette."),
+      MENU_MAKE_DIALOG_ACTION (6, "Sony CXA", "Consumer-grade Sony TV sets."),
+      MENU_MAKE_DIALOG_ACTION (7, "Wavebeam", "An approximation by Nakedarthur."),
+      MENU_MAKE_LASTITEM  ()
+};
+
 SMenuItem optionsForFrameskip[] = {
     MENU_MAKE_DIALOG_ACTION (0, "Disabled",                 ""),
     MENU_MAKE_DIALOG_ACTION (1, "Enabled (max 1 frame)",    ""),
@@ -148,6 +160,7 @@ SMenuItem optionMenu[] = {
     MENU_MAKE_PICKER    (11000, "  Screen Stretch", "How would you like the final screen to appear?", optionsForStretch, DIALOGCOLOR_CYAN),
     MENU_MAKE_PICKER    (18000, "  Font", "The font used for the user interface.", optionsForFont, DIALOGCOLOR_CYAN),
     MENU_MAKE_PICKER    (18100, "  Theme", "The color theme of the user interface.", optionsForTheme, DIALOGCOLOR_CYAN),
+    MENU_MAKE_PICKER    (18200, "  Palette", "The colors used to show the NES picture.", optionsForPalette, DIALOGCOLOR_CYAN),
     MENU_MAKE_CHECKBOX  (15001, "  Hide text in bottom screen", 0),
     MENU_MAKE_DISABLED  (""),
     MENU_MAKE_CHECKBOX  (21000, "  Automatically save state on exit and load state on start", 0),
@@ -367,7 +380,7 @@ u32 input3dsDefaultButtonMappings[10] = { BTNNES_A, BTNNES_B, BTNNES_A, BTNNES_B
 //---------------------------------------------------------
 bool impl3dsInitializeCore()
 {
-	nespalInitialize();
+	nespalInitialize(settings3DS.NESPalette);
 
 	// Initialize our GPU.
 	// Load up and initialize any shaders
@@ -1121,6 +1134,8 @@ bool impl3dsReadWriteSettingsGlobal(bool writeMode)
     if (!writeMode)
         theme3dsSet(themeIndex);
 
+    config3dsReadWriteInt32("NESPalette=%d\n", &settings3DS.NESPalette, 0, NES_PALETTE_COUNT - 1);
+
     config3dsCloseFile();
 
     // All new options should come here!
@@ -1140,6 +1155,11 @@ bool impl3dsReadWriteSettingsGlobal(bool writeMode)
 //----------------------------------------------------------------------
 bool impl3dsApplyAllSettings(bool updateGameSettings)
 {
+    // Rebuild the palette. Some games only write their palette once, so
+    // the PPU is told to redo its colors.
+    nespalInitialize(settings3DS.NESPalette);
+    PAL_Changed = true;
+
     bool settingsChanged = false;
 
     // update screen stretch
@@ -1226,6 +1246,7 @@ bool impl3dsCopyMenuToOrFromSettings(bool copyMenuToSettings)
 
     bool settingsUpdated = false;
     UPDATE_SETTINGS(settings3DS.Font, -1, 18000);
+    UPDATE_SETTINGS(settings3DS.NESPalette, -1, 18200);
 
     int themeIndex = theme3dsGetIndex();
     UPDATE_SETTINGS(themeIndex, -1, 18100);

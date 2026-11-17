@@ -12,7 +12,7 @@ Full 60 FPS on almost every game, on Old 3DS, New 3DS and 2DS.
 - **Famicom Disk System.** Plays FDS games, with disk switching.
 - **Demanding hacks.** Fixed MMC5 bugs let Rockman 4 Minus Infinity and Zelda: Legend of Link run.
 - **Cheats and save states.** Game Genie cheats in simple .CHX files, plus save states and auto-save.
-- **Made for the 3DS.** Fast forward up to 180 FPS, button mapping (including insert coin for VS games), dark and light themes and an animated splash screen.
+- **Made for the 3DS.** Fast forward up to 180 FPS, button mapping (including insert coin for VS games), dark and light themes, a choice of NES color palettes and an animated splash screen.
 
 Built for speed: VirtuaNES trades some cycle-level accuracy for full-speed play on 3DS hardware, so a desktop emulator such as FCEUX or Nestopia is the better choice when exactness matters more than portability.
 
@@ -71,6 +71,21 @@ The emulator can switch disks for games that use more than one.
 ### Themes
 
 The menu has a Dark theme and a Light theme. Choose it with Theme in the Appearance section of the Emulator tab at start-up, or in the Options tab while a game is running. The choice is saved with the other global settings. The Appearance section also has the font.
+
+### Color palettes
+
+The NES has no fixed colors: every TV and every capture device showed them a little differently. Palette in the Options tab changes the colors of the picture, so you can pick the look you like. It takes effect right away, even while a game is running, and the choice is saved with the global settings.
+
+- **FCEUX**: the default palette.
+- **Composite Direct (FBX)**: a direct capture from the console's composite output.
+- **NES Classic (FBX)**: the colors of the NES Classic Edition.
+- **PC-10**: the PlayChoice-10 arcade system.
+- **PVM Style D93 (FBX)**: a Sony PVM monitor at the D93 color temperature.
+- **Smooth (FBX)**: a smooth, natural palette.
+- **Sony CXA**: consumer-grade Sony TV sets.
+- **Wavebeam**: an approximation by Nakedarthur.
+
+The palettes are in `src/cores/virtuanes/3ds/palettelist.cpp`. To add one, add its 64 colors there, raise `NES_PALETTE_COUNT` in `palette.h` and add an entry to `optionsForPalette` in `3dsimpl.cpp`.
 
 ## .CHX cheat files
 
@@ -174,6 +189,7 @@ The code that was written with AI help is commented in detail, so that it can be
 7. Fellow forummers on GBATemp for the bug reports and suggestions for improvements.
 8. [GamingFanboy365](https://github.com/GamingFanboy365/virtuanes3ds), whose fork this project is based on, for adding the new mappers 30, 37, 152, 153, 154, 155, 157, 158, 159, 207 and 210, for the build setup and the Azahar test tools, and for the fixes that make the emulator run on real hardware (start-up, sound, the HOME menu and exit).
 9. matbo87, whose Snes9x 3DS fork inspired the themes, the bottom bar and the splash screen.
+10. TBirdSoars, whose [VirtuaNES fork](https://github.com/TBirdSoars/VirtuaNES) inspired the palette selection and supplied the palette data; FirebrandX (the FBX palettes) and Nakedarthur (Wavebeam).
 
 ## License
 

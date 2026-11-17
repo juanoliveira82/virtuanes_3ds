@@ -22,6 +22,8 @@ typedef struct
 
     int     Font = 0;                       // 0 - Tempesta, 1 - Ronda, 2 - Arial
 
+    int     NESPalette = 0;                 // The color palette, see palettelist.cpp
+
     int     HideUnnecessaryBottomScrText = 0;
                                             // Feature: add new option to disable unnecessary bottom screen text.
                                             // 0 - Default show FPS and "Touch screen for menu" text, 1 - Hide those text.
