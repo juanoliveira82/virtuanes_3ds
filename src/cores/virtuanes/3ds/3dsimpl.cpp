@@ -79,15 +79,15 @@ SMenuItem optionsForStretch[] = {
 };
 
 SMenuItem optionsForPalette[] = {
-      MENU_MAKE_DIALOG_ACTION (0, "FCEUX", "The default palette."),
-      MENU_MAKE_DIALOG_ACTION (1, "Composite Direct (FBX)", "Direct capture from the composite output."),
-      MENU_MAKE_DIALOG_ACTION (2, "NES Classic (FBX)", "Taken from the NES Classic Edition."),
-      MENU_MAKE_DIALOG_ACTION (3, "PC-10", "The PlayChoice-10 arcade system."),
-      MENU_MAKE_DIALOG_ACTION (4, "PVM Style D93 (FBX)", "Sony PVM monitor, D93 color temperature."),
-      MENU_MAKE_DIALOG_ACTION (5, "Smooth (FBX)", "A smooth, natural palette."),
-      MENU_MAKE_DIALOG_ACTION (6, "Sony CXA", "Consumer-grade Sony TV sets."),
-      MENU_MAKE_DIALOG_ACTION (7, "Wavebeam", "An approximation by Nakedarthur."),
-      MENU_MAKE_LASTITEM  ()
+    MENU_MAKE_DIALOG_ACTION (0, "FCEUX",             "Default"),
+    MENU_MAKE_DIALOG_ACTION (1, "Composite (FBX)",   "Composite capture"),
+    MENU_MAKE_DIALOG_ACTION (2, "NES Classic (FBX)", "NES Classic Edition"),
+    MENU_MAKE_DIALOG_ACTION (3, "PC-10",             "PlayChoice-10"),
+    MENU_MAKE_DIALOG_ACTION (4, "PVM D93 (FBX)",     "Sony PVM monitor"),
+    MENU_MAKE_DIALOG_ACTION (5, "Smooth (FBX)",      "Natural colors"),
+    MENU_MAKE_DIALOG_ACTION (6, "Sony CXA",          "Sony TV sets"),
+    MENU_MAKE_DIALOG_ACTION (7, "Wavebeam",          "By Nakedarthur"),
+    MENU_MAKE_LASTITEM  ()
 };
 
 SMenuItem optionsForFrameskip[] = {
