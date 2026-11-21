@@ -9,6 +9,7 @@
 #include <3ds.h>
 
 #include <dirent.h>
+#include <sys/stat.h>
 
 #include "3dstypes.h"
 #include "3dsemu.h"
@@ -1084,9 +1085,30 @@ bool impl3dsReadWriteSettingsByGame(bool writeMode)
 //
 // This must return true if the settings file exist.
 //----------------------------------------------------------------------
+// Where the global settings are kept. It is a fixed path because the
+// current folder depends on how the app was started (the CIA and the
+// Homebrew Launcher start in different folders), and it may not be
+// writable.
+#define GLOBAL_SETTINGS_FILE        "sdmc:/3ds/virtuanes_3ds/virtuanes_3ds.cfg"
+
+// Where older versions kept them. It is still read if the new file
+// doesn't exist yet, so that the settings are not lost.
+#define OLD_GLOBAL_SETTINGS_FILE    "./virtuanes_3ds.cfg"
+
 bool impl3dsReadWriteSettingsGlobal(bool writeMode)
 {
-    bool success = config3dsOpenFile("./virtuanes_3ds.cfg", writeMode);
+    // The folder may not exist yet (for example, when running the CIA).
+    if (writeMode)
+    {
+        mkdir("sdmc:/3ds", 0777);
+        mkdir("sdmc:/3ds/virtuanes_3ds", 0777);
+    }
+
+    bool success = config3dsOpenFile(GLOBAL_SETTINGS_FILE, writeMode);
+    if (!success && !writeMode)
+        success = config3dsOpenFile(OLD_GLOBAL_SETTINGS_FILE, false);
+
+    TRACE3DS_LOG("global settings %s: %s", writeMode ? "write" : "read", success ? "ok" : "failed");
     if (!success)
         return false;
     
