@@ -123,16 +123,35 @@ WATCHDOG=$!
 # the render window "Azahar". The render window only appears once the app
 # has booted, which can take a while with software OpenGL, or until a
 # debugger attaches with -g.
+#
+# Azahar 2126.2 opens a title that was installed from a .cia in two windows
+# instead, titled "Azahar <version> | <title> | Primary Window" (the top
+# screen) and "... | Secondary Window" (the bottom screen). Without a window
+# manager they open at the places that the screenshots expect: the top
+# screen at 0,0 and the bottom one at 40,240. The primary window is then the
+# one that gets the keys, and it is not resized.
 azahar_windows() {
     xdotool search --maxdepth 1 --onlyvisible --class Azahar 2>/dev/null
 }
 WIN=""
 MAIN=""
+PRIMARY=""
 for _ in $(seq $((TIMEOUT * 5))); do
     for w in $(azahar_windows); do
-        if [ "$(xdotool getwindowname "$w")" = Azahar ]; then WIN=$w; else MAIN=$w; fi
+        name=$(xdotool getwindowname "$w")
+        case "$name" in
+            Azahar)                 WIN=$w ;;
+            *"| Primary Window")    PRIMARY=$w ;;
+            *"| Secondary Window")  ;;
+            *)                      MAIN=$w ;;
+        esac
     done
     [ -n "$WIN" ] && break
+    if [ -n "$PRIMARY" ]; then
+        WIN=$PRIMARY
+        echo "using the primary window of a two-window layout" >&2
+        break
+    fi
     sleep 0.2
 done
 if [ -z "$WIN" ]; then
@@ -144,7 +163,11 @@ if [ -z "$WIN" ]; then
     exit 1
 fi
 [ -n "$MAIN" ] && xdotool windowmove "$MAIN" 420 0
-xdotool windowmove "$WIN" 0 0 windowsize "$WIN" 400 480 windowfocus --sync "$WIN" 2>/dev/null
+if [ "$WIN" = "$PRIMARY" ]; then
+    xdotool windowmove "$WIN" 0 0 windowfocus --sync "$WIN" 2>/dev/null
+else
+    xdotool windowmove "$WIN" 0 0 windowsize "$WIN" 400 480 windowfocus --sync "$WIN" 2>/dev/null
+fi
 
 shot() {
     if xwdtopnm "$FB/Xvfb_screen0" 2>/dev/null | pamcut 0 0 400 480 | pnmtopng -force >"/out/$1.png" 2>/dev/null; then
