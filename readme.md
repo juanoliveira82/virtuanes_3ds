@@ -20,17 +20,50 @@ This project continues from [GamingFanboy365's virtuanes3ds](https://github.com/
 
 ## Screenshots
 
-![alt tag](https://github.com/bubble2k16/emus3ds/blob/master/screenshots/VirtuaNES%20-%20Bionic%20Commando.bmp)
+<table>
+  <tr>
+    <td width="50%" align="center">
+      <img src="screenshots/01-rom-list-dark.png" alt="ROM list, Dark theme"><br>
+      <sub>ROM list, Dark theme</sub>
+    </td>
+    <td width="50%" align="center">
+      <img src="screenshots/02-rom-list-light.png" alt="ROM list, Light theme"><br>
+      <sub>ROM list, Light theme</sub>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center">
+      <img src="screenshots/04-gameplay-fceux.png" alt="Palette: FCEUX (default)"><br>
+      <sub>Palette: FCEUX (default)</sub>
+    </td>
+    <td width="50%" align="center">
+      <img src="screenshots/05-gameplay-pvm-d93.png" alt="Palette: PVM D93 (FBX)"><br>
+      <sub>Palette: PVM D93 (FBX)</sub>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center">
+      <img src="screenshots/03-palette-picker.png" alt="Choosing a color palette"><br>
+      <sub>Choosing a color palette</sub>
+    </td>
+    <td width="50%" align="center">
+      <img src="screenshots/06-options-tab.png" alt="Options: palette and screen stretch"><br>
+      <sub>Options: palette and screen stretch</sub>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center">
+      <img src="screenshots/07-appearance-section.png" alt="Theme and font in the Appearance section"><br>
+      <sub>Theme and font in the Appearance section</sub>
+    </td>
+    <td width="50%" align="center">
+      <img src="screenshots/08-rom-error-dialog.png" alt="The load error says what is missing"><br>
+      <sub>The load error says what is missing</sub>
+    </td>
+  </tr>
+</table>
 
-![alt tag](https://github.com/bubble2k16/emus3ds/blob/master/screenshots/VirtuaNES%20-%20Gradius%20II.bmp)
-
-![alt tag](https://github.com/bubble2k16/emus3ds/blob/master/screenshots/VirtuaNES%20-%20Kirby's%20Adventure.bmp)
-
-![alt tag](https://github.com/bubble2k16/emus3ds/blob/master/screenshots/VirtuaNES%20-%20Legend%20of%20Link.bmp)
-
-![alt tag](https://github.com/bubble2k16/emus3ds/blob/master/screenshots/VirtuaNES%20-%20Rockman%204%20Minus%20Infinity.bmp)
-
-![alt tag](https://github.com/bubble2k16/emus3ds/blob/master/screenshots/VirtuaNES%20-%20Super%20Mario%20Bros%203.bmp)
+The game shown is [Super Bat Puncher Demo](https://morphcatgames.itch.io/sbpdemo) by Morphcat Games.
 
 ## Installation
 
