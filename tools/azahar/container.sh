@@ -41,6 +41,7 @@ declare -A KEYS=(
 )
 
 FB=/tmp/fb
+SDMC=/config/.local/share/azahar-emu/sdmc
 LOG=/config/.local/share/azahar-emu/log/azahar_log.txt
 mkdir -p "$FB"
 
@@ -63,7 +64,45 @@ case "$APP" in *.cia) install_cia ;; esac
 azahar $AZAHAR_ARGS "$APP" >/tmp/azahar_stdout.txt 2>&1 &
 AZ=$!
 
+# Tells what the emulator was doing when a run failed or timed out, and
+# saves the files that the Azahar log doesn't have. It runs before the
+# emulator is stopped, so that its windows and processes can still be seen.
+#
+# The text goes to the error output (the log of the CI step). The files go
+# to /out: failure_screen.png is the whole virtual display, and sdmc/ has
+# the text and settings files that the app wrote to the emulated SD card
+# (for example virtuanes_trace.txt from a `make TRACE=1` build).
+diagnose() {
+    echo "--- diagnostics (exit status $1) ---" >&2
+    if kill -0 "$AZ" 2>/dev/null; then
+        echo "Azahar is still running." >&2
+    else
+        echo "Azahar is not running any more." >&2
+    fi
+
+    echo "Windows on the virtual display:" >&2
+    for w in $(xdotool search --name '' 2>/dev/null); do
+        echo "  $w name '$(xdotool getwindowname "$w" 2>/dev/null)' class '$(xdotool getwindowclassname "$w" 2>/dev/null)'" >&2
+    done
+
+    echo "Last lines of Azahar's own output:" >&2
+    tail -n 40 /tmp/azahar_stdout.txt >&2 2>/dev/null
+
+    echo "The emulated SD card:" >&2
+    (cd "$SDMC" 2>/dev/null && find . -maxdepth 4 -not -path './Nintendo 3DS/*/*/*/*' | head -n 60) >&2
+
+    mkdir -p /out/sdmc
+    find "$SDMC" -maxdepth 4 -not -path "$SDMC/Nintendo 3DS/*" \( -name '*.txt' -o -name '*.cfg' \) \
+        -exec cp -t /out/sdmc {} + 2>/dev/null
+    xwdtopnm "$FB/Xvfb_screen0" 2>/dev/null | pnmtopng -force >/out/failure_screen.png 2>/dev/null
+    echo "--- end of diagnostics ---" >&2
+}
+
 finish() {
+    local status=$?
+    if [ "$status" -ne 0 ]; then
+        diagnose "$status"
+    fi
     kill "$AZ" 2>/dev/null
     for _ in $(seq 50); do
         kill -0 "$AZ" 2>/dev/null || break

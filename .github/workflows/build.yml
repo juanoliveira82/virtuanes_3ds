@@ -16,6 +16,16 @@ jobs:
       - name: Build
         run: tools/build.sh
 
+      # Before the tests, so that the build is kept even if a test fails.
+      - name: Upload build
+        uses: actions/upload-artifact@v4
+        with:
+          name: virtuanes_3ds
+          path: |
+            virtuanes_3ds.3dsx
+            virtuanes_3ds.cia
+            virtuanes_3ds.smdh
+
       - name: Pull Azahar
         run: docker pull -q linuxserver/azahar:latest
 
@@ -27,15 +37,6 @@ jobs:
       # Generated test ROMs for the mappers added in this fork.
       - name: Mapper tests in Azahar
         run: tools/azahar/mappertest.py
-
-      - name: Upload build
-        uses: actions/upload-artifact@v4
-        with:
-          name: virtuanes_3ds
-          path: |
-            virtuanes_3ds.3dsx
-            virtuanes_3ds.cia
-            virtuanes_3ds.smdh
 
       - name: Upload test screenshots and logs
         if: always()
