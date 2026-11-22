@@ -16,6 +16,9 @@
 - Added `make TRACE=1`, a build that logs the start-up, the sound and the shutdown to the SD card, to help find freezes on real hardware.
 - The ROM list opens in the folder of the last game you loaded.
 - NES color palettes: choose between 8 palettes (FCEUX, four by FirebrandX, PC-10, Sony CXA and Wavebeam) in the Options. The change applies immediately, even in a running game, and is saved with the global settings.
+- Fixed the picture freezing when returning from the HOME menu.
+- The "unable to load ROM" dialog now says why, for example where the FDS BIOS goes.
+- Fixed the settings not being saved when running the CIA (theme, font, screen stretch, palette and the ROM folder). They are now kept in /3ds/virtuanes_3ds/virtuanes_3ds.cfg, and the settings of older versions are still read.
 
 ### v1.03
 
