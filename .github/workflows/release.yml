@@ -7,7 +7,8 @@ name: Release
 #
 # The release is named after the version in the Makefile
 # (VERSION_MAJOR.VERSION_MINOR.VERSION_MICRO, for example 1.0.4), and
-# its text is the section of CHANGELOG.md with the same version
+# its text is .github/release_instructions.md (how to use the files),
+# followed by the section of CHANGELOG.md with the same version
 # (for example "### v1.04"), copied exactly as it is written there.
 #
 # To make a new release:
@@ -79,6 +80,12 @@ jobs:
           fi
           cat release_notes.md
 
+      # The text of the release page: the instructions, then "Changelog".
+      - name: Add the instructions above the changelog
+        run: |
+          cat .github/release_instructions.md release_notes.md > release_body.md
+          cat release_body.md
+
       - name: Build
         run: tools/build.sh
 
@@ -97,6 +104,6 @@ jobs:
           gh release create "$TAG" \
             virtuanes_3ds.3dsx virtuanes_3ds.smdh virtuanes_3ds.cia \
             --title "VirtuaNES for 3DS $TAG" \
-            --notes-file release_notes.md \
+            --notes-file release_body.md \
             --target "$GITHUB_SHA" \
             "${args[@]}"
