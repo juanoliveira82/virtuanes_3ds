@@ -36,7 +36,6 @@ jobs:
             virtuanes_3ds.3dsx
             virtuanes_3ds.cia
             virtuanes_3ds.smdh
-            virtuanes_3ds_top.png
 
       - name: Upload test screenshots and logs
         if: always()
