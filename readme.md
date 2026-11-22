@@ -36,7 +36,7 @@ This project continues from [GamingFanboy365's virtuanes3ds](https://github.com/
 
 You need a 3DS, 2DS or New 3DS that can run homebrew (usually with custom firmware). There are two ways to install: the `.3dsx` runs from the Homebrew Launcher without installing anything, and the `.cia` installs VirtuaNES as an app on the HOME menu.
 
-VirtuaNES for 3DS is distributed as source code: you build it yourself (see [Building](#building)), which produces `virtuanes_3ds.3dsx`, `virtuanes_3ds.smdh` and `virtuanes_3ds.cia`.
+Ready-made `virtuanes_3ds.3dsx`, `virtuanes_3ds.smdh` and `virtuanes_3ds.cia` files are published on the [Releases](https://github.com/juanoliveira82/virtuanes_3ds/releases) page. You can also build them yourself (see [Building](#building)).
 
 ### Homebrew Launcher (.3dsx)
 
@@ -70,17 +70,17 @@ The emulator can switch disks for games that use more than one.
 
 ### Themes
 
-The menu has a Dark theme and a Light theme. Choose it with Theme in the Appearance section of the Emulator tab at start-up, or in the Options tab while a game is running. The choice is saved with the other global settings. The Appearance section also has the font.
+The menu has a Dark theme and a Light theme. Choose it with Theme in the Appearance section of the Emulator tab at start-up, or in the Options tab while a game is running. The choice is saved with the other global settings, in `/3ds/virtuanes_3ds/virtuanes_3ds.cfg` on the SD card. The Appearance section also has the font.
 
 ### Color palettes
 
 The NES has no fixed colors: every TV and every capture device showed them a little differently. Palette in the Options tab changes the colors of the picture, so you can pick the look you like. It takes effect right away, even while a game is running, and the choice is saved with the global settings.
 
 - **FCEUX**: the default palette.
-- **Composite Direct (FBX)**: a direct capture from the console's composite output.
+- **Composite (FBX)**: a direct capture from the console's composite output.
 - **NES Classic (FBX)**: the colors of the NES Classic Edition.
 - **PC-10**: the PlayChoice-10 arcade system.
-- **PVM Style D93 (FBX)**: a Sony PVM monitor at the D93 color temperature.
+- **PVM D93 (FBX)**: a Sony PVM monitor at the D93 color temperature.
 - **Smooth (FBX)**: a smooth, natural palette.
 - **Sony CXA**: consumer-grade Sony TV sets.
 - **Wavebeam**: an approximation by Nakedarthur.
@@ -114,7 +114,7 @@ NOTE: If you enable a cheat, and then disable it, you may need to reset the game
 
 ### Building
 
-The code builds with a current devkitARM (libctru 2.x). If you have devkitPro installed, run `make`, which produces `virtuanes_3ds.3dsx` and `virtuanes_3ds.cia`.
+The code builds with a current devkitARM (libctru 2.x). If you have devkitPro installed, run `make`, which produces `virtuanes_3ds.3dsx`, `virtuanes_3ds.smdh` and `virtuanes_3ds.cia`.
 
 Without a local devkitPro, `tools/build.sh` runs the same `make` inside the official `devkitpro/devkitarm` Docker image and passes its arguments through, so `tools/build.sh clean` works too.
 
@@ -203,4 +203,4 @@ The project also contains work with its own copyright notices, which are kept in
 - lodepng, by Lode Vandevenne (`src/3ds/3dslodepng.*`), under the zlib license;
 - the code that Norix credits in the VirtuaNES core (see the credits above).
 
-The source code is in this repository. The project doesn't include ROMs or BIOS files, and it doesn't distribute ready-made builds.
+The source code is in this repository. The project doesn't include ROMs or BIOS files. The builds on the Releases page are made from this source code by the workflow in `.github/workflows/release.yml`.
